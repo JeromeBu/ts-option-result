@@ -1,6 +1,6 @@
 {
     "name": "ts-option-result",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "",
     "repository": {
         "type": "git",
@@ -35,6 +35,7 @@
     "files": [
         "src/",
         "!src/test/",
+        "!src/utils.ts",
         "dist/",
         "!dist/test/",
         "!dist/tsconfig.tsbuildinfo"
@@ -44,6 +45,7 @@
     "devDependencies": {
         "@types/jest": "^26.0.23",
         "@types/node": "^10.0.0",
+        "@types/ramda": "^0.27.40",
         "@typescript-eslint/eslint-plugin": "^4.15.1",
         "@typescript-eslint/parser": "^4.15.1",
         "eslint": "^7.20.0",
@@ -52,9 +54,11 @@
         "jest": "^26.6.3",
         "lint-staged": "^10.5.4",
         "prettier": "^2.2.1",
+        "ramda": "^0.27.1",
         "simplifyify": "^8.0.3",
         "terser": "^5.3.8",
         "ts-jest": "^26.5.6",
         "typescript": "^4.1.5"
-    }
+    },
+    "dependencies": {}
 }
