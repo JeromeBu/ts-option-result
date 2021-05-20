@@ -10,12 +10,7 @@
     "types": "dist/index.d.ts",
     "scripts": {
         "test": "jest",
-        "cdn:bundle:.js": "simplifyify dist/index.js -s ts_option_result -o dist/bundle.js --debug --bundle",
-        "cdn:bundle:.min.js": "terser dist/bundle.js -cmo dist/bundle.min.js",
-        "cdn:bundle": "npm run cdn:bundle:.js && npm run cdn:bundle:.min.js",
-        "cdn:esm": "tsc -p tsconfig.esm.json",
-        "cdn": "npm run cdn:bundle && npm run cdn:esm",
-        "build": "tsc && npm run cdn",
+        "build": "tsc",
         "lint:check": "eslint . --ext .ts,.tsx",
         "lint": "npm run lint:check -- --fix",
         "_format": "prettier '**/*.{ts,tsx,json,md}'",
