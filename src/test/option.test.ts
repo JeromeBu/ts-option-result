@@ -1,4 +1,4 @@
-import { none, Option, some } from "../option";
+import { none, Option, some } from "../lib/option";
 import { pipe } from "ramda";
 
 describe("Option", () => {
