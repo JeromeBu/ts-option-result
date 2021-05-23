@@ -1,4 +1,4 @@
-import { curry } from "../utils";
+import { curry } from "./utils";
 
 export interface OptionCases<A, B> {
     some: (a: A) => B;
