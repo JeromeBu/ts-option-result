@@ -108,6 +108,6 @@ export namespace Option {
     export function caseOf<A, B>(cases: OptionCases<A, B>): (optA: Option<A>) => B
     // prettier-ignore
     export function caseOf<A, B>(cases: OptionCases<A, B>, optA?: Option<A>): any {
-    return curry(option => option.caseOf(cases), optA);
-  }
+        return curry(option => option.caseOf(cases), optA);
+    }
 }

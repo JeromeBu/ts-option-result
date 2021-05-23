@@ -1,19 +1,16 @@
-<p align="center">
-    <img src="https://user-images.githubusercontent.com/6702424/80216211-00ef5280-863e-11ea-81de-59f3a3d4b8e4.png">  
-</p>
+ts-option-result provides is a small library to handle null cases and error cases in a clean way.
+
+Option and OptionAsync are used to handle cases of nullity.
+Result and ResultAsync are used for error handling in a descriptive and type safe way.
+
 <p align="center">
     <i></i>
     <br>
     <br>
-    <img src="https://github.com/garronej/ts-option-result/workflows/ci/badge.svg?branch=main">
+    <img src="https://github.com/jeromebu/ts-option-result/workflows/ci/badge.svg?branch=main">
     <img src="https://img.shields.io/bundlephobia/minzip/ts-option-result">
     <img src="https://img.shields.io/npm/dw/ts-option-result">
     <img src="https://img.shields.io/npm/l/ts-option-result">
-</p>
-<p align="center">
-  <a href="https://github.com/JeromeBu/ts-option-result">Home</a>
-  -
-  <a href="https://github.com/JeromeBu/ts-option-result">Documentation</a>
 </p>
 
 # Install / Import
@@ -22,42 +19,69 @@
 $ npm install --save ts-option-result
 ```
 
-```typescript
-import { myFunction, myObject } from "ts-option-result";
-```
-
-Specific imports:
+This is a typical case where Option can help you.
 
 ```typescript
-import { myFunction } from "ts-option-result/myFunction";
-import { myObject } from "ts-option-result/myObject";
+const getString: () => string | null;
+
+const lengthIfStringIsPresent = (): number | null => {
+    const strOrNull = getString();
+    if (!strOrNull) return null;
+    return strOrNull.length;
+};
 ```
 
-## Import from HTML, with CDN
+Using Option :
 
-Import it via a bundle that creates a global ( wider browser support ):
+```typescript
+export { Option } from "ts-option-result";
 
-```html
-<script src="//unpkg.com/ts-option-result/bundle.min.js"></script>
-<script>
-    const { myFunction, myObject } = ts_option_result;
-</script>
+const getString: () => Option<string>; // exemple: () => some("a random string")
+
+const checkIfBobStringIsLongEnough = (): Option<number> => {
+    return getString().map(str => str.length);
+};
+
+// or step by step :
+// const checkIfBobStringIsLongEnough = (): Option<number> => {
+//     const optionStr = getString();
+//     const optionLength = optionoptionStr.map(str => str.length)
+//     return optionLength
+// }
 ```
 
-Or import it as an ES module:
+You can chain Options using map and flatMap, and only unWrap at the very end of your process.
 
-```html
-<script type="module">
-    import { myFunction, myObject } from "//unpkg.com/ts-option-result/zz_esm/index.js";
-</script>
+```typescript
+export { Option } from "ts-option-result";
+
+type Person = {
+    name: string;
+    father: Option<Person>;
+};
+
+const getFatherName = (optionPerson: Option<Person>) => {
+    return optionPerson
+        .flatMap(person => person.father)
+        .map(father => father.name)
+        .caseOf({
+            none: () => "Not relevant",
+            some: fatherName => `Father's name is ${fatherName}`,
+        });
+};
 ```
 
-_You can specify the version you wish to import:_ [unpkg.com](https://unpkg.com)
+Which could also be written with point free style (pipe function is the one from [Ramda](https://ramdajs.com/docs/#pipe)):
 
-## Contribute
+```typescript
+const getFaterName = pipe<Option<Person>, Option<Person>, Option<string>, string>(
+    Option.flatMap(person => person.father),
+    Option.map(father => father.name),
+    Option.caseOf({
+        none: () => "Not relevant",
+        some: fatherName => `Father's name is ${fatherName}`,
+    }),
+);
 
-```bash
-npm install
-npm run build
-npm test
+const getFatherName = pipe(Option.flatMap(person => person.father));
 ```
