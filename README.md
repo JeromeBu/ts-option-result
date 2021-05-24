@@ -19,6 +19,9 @@ Result and ResultAsync are used for error handling in a descriptive and type saf
 $ npm install --save ts-option-result
 ```
 
+
+# Option
+
 This is a typical case where Option can help you.
 
 ```typescript
@@ -34,7 +37,7 @@ const lengthIfStringIsPresent = (): number | null => {
 Using Option :
 
 ```typescript
-export { Option } from "ts-option-result";
+import { Option } from "ts-option-result";
 
 const getString: () => Option<string>; // exemple: () => some("a random string")
 
@@ -45,7 +48,7 @@ const checkIfBobStringIsLongEnough = (): Option<number> => {
 // or step by step :
 // const checkIfBobStringIsLongEnough = (): Option<number> => {
 //     const optionStr = getString();
-//     const optionLength = optionoptionStr.map(str => str.length)
+//     const optionLength = optionStr.map(str => str.length)
 //     return optionLength
 // }
 ```
@@ -53,7 +56,7 @@ const checkIfBobStringIsLongEnough = (): Option<number> => {
 You can chain Options using map and flatMap, and only unWrap at the very end of your process.
 
 ```typescript
-export { Option } from "ts-option-result";
+import { Option } from "ts-option-result";
 
 type Person = {
     name: string;
@@ -74,6 +77,8 @@ const getFatherName = (optionPerson: Option<Person>) => {
 Which could also be written with point free style (pipe function is the one from [Ramda](https://ramdajs.com/docs/#pipe)):
 
 ```typescript
+import { Option } from "ts-option-result";
+
 const getFaterName = pipe<Option<Person>, Option<Person>, Option<string>, string>(
     Option.flatMap(person => person.father),
     Option.map(father => father.name),
@@ -82,6 +87,4 @@ const getFaterName = pipe<Option<Person>, Option<Person>, Option<string>, string
         some: fatherName => `Father's name is ${fatherName}`,
     }),
 );
-
-const getFatherName = pipe(Option.flatMap(person => person.father));
 ```
