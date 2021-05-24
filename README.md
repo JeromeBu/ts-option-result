@@ -19,7 +19,6 @@ Result and ResultAsync are used for error handling in a descriptive and type saf
 $ npm install --save ts-option-result
 ```
 
-
 # Option
 
 This is a typical case where Option can help you.
@@ -46,14 +45,15 @@ const checkIfBobStringIsLongEnough = (): Option<number> => {
 };
 
 // or step by step :
-// const checkIfBobStringIsLongEnough = (): Option<number> => {
-//     const optionStr = getString();
-//     const optionLength = optionStr.map(str => str.length)
-//     return optionLength
-// }
+
+const checkIfBobStringIsLongEnough = (): Option<number> => {
+    const optionStr = getString();
+    const optionLength = optionStr.map(str => str.length);
+    return optionLength;
+};
 ```
 
-You can chain Options using map and flatMap, and only unWrap at the very end of your process.
+You can chain Options using map and flatMap, and only unWrap (with CaseOf) at the very end of your process.
 
 ```typescript
 import { Option } from "ts-option-result";
@@ -88,3 +88,5 @@ const getFaterName = pipe<Option<Person>, Option<Person>, Option<string>, string
     }),
 );
 ```
+
+# OptionAsync
