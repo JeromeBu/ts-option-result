@@ -1,11 +1,19 @@
 import { none, Option, some } from "..";
 import { pipe } from "ramda";
+import { fromNullable } from "../lib/option";
 
 describe("Option", () => {
     describe("methods", () => {
         it("construct some and none", () => {
             expect(some(12).getOrNull()).toBe(12);
             expect(none().getOrNull()).toBeNull();
+        });
+
+        it("from nullable", () => {
+            const a: string | null = "bob";
+            const b: string | null = null;
+            expect(fromNullable(a).getOrNull()).toBe("bob");
+            expect(fromNullable(b).getOrNull()).toBe(null);
         });
 
         it("getOrElse", () => {
@@ -60,13 +68,6 @@ describe("Option", () => {
     });
 
     describe("namespace functions", () => {
-        it("from nullable", () => {
-            const a: string | null = "bob";
-            const b: string | null = null;
-            expect(Option.fromNullable(a).getOrNull()).toBe("bob");
-            expect(Option.fromNullable(b).getOrNull()).toBe(null);
-        });
-
         it("map", () => {
             const optionA = some("yolo");
             const checkLengthOver2 = pipe<Option<string>, Option<number>, Option<boolean>>(

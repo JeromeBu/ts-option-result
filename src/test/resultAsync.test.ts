@@ -1,4 +1,4 @@
-import { errAsync, ok, okAsync, ResultAsync } from "..";
+import { errAsync, fromPromise, ok, okAsync, ResultAsync } from "..";
 import { expectErrAsync, expectOkAsync } from "./helpers";
 
 describe("ResultAsync", () => {
@@ -41,15 +41,15 @@ describe("ResultAsync", () => {
     describe("namespace functions", () => {
         it("fromPromise", async () => {
             const resolveStr = Promise.resolve("myStr");
-            const okAsyncStr = ResultAsync.fromPromise(resolveStr);
+            const okAsyncStr = fromPromise(resolveStr);
             await expectOkAsync(okAsyncStr, "myStr");
 
             const rejectStr: Promise<string> = Promise.reject("failure");
-            const errAsyncStr = ResultAsync.fromPromise(rejectStr);
+            const errAsyncStr = fromPromise(rejectStr);
             await expectErrAsync(errAsyncStr, "failure");
 
             const rejectStr2: Promise<string> = Promise.reject("failure");
-            const errAsyncStr2 = ResultAsync.fromPromise(rejectStr2, e => "error was " + e);
+            const errAsyncStr2 = fromPromise(rejectStr2, e => "error was " + e);
             await expectErrAsync(errAsyncStr2, "error was failure");
         });
     });

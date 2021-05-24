@@ -1,4 +1,4 @@
-export { some, none, Option } from "./lib/option";
+export { some, none, fromNullable, Option } from "./lib/option";
 export { someAsync, noneAsync, OptionAsync } from "./lib/optionAsync";
 export { ok, err, Result } from "./lib/result";
-export { okAsync, errAsync, ResultAsync } from "./lib/resultAsync";
+export { okAsync, errAsync, fromPromise, ResultAsync } from "./lib/resultAsync";

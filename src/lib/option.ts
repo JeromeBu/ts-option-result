@@ -16,6 +16,10 @@ export interface Option<A> {
 
 export const some = <A>(a: A) => new Some(a);
 export const none = () => new None();
+export const fromNullable = <T>(value: T | undefined | null): Option<T> => {
+    if (value === null || value === undefined) return none();
+    return some(value);
+};
 
 export class Some<A> implements Option<A> {
     constructor(private value: A) {}
@@ -73,11 +77,6 @@ export class None implements Option<never> {
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Option {
-    export function fromNullable<T>(value: T | undefined | null): Option<T> {
-        if (value === null || value === undefined) return none();
-        return some(value);
-    }
-
     export function map<A, B>(f: (a: A) => B, a: Option<A>): Option<B>;
     export function map<A, B>(f: (a: A) => B): (a: Option<A>) => Option<B>;
     export function map<A, B>(f: (a: A) => B, optA?: Option<A>): any {

@@ -6,6 +6,17 @@ export const okAsync = <A, E>(value: A): ResultAsync<A, E> =>
 export const errAsync = <A, E>(error: E): ResultAsync<A, E> =>
     new ResultAsync(Promise.resolve(err<A, E>(error)));
 
+export const fromPromise = <T, F>(somePromise: Promise<T>, onError?: (e: unknown) => F) => {
+    const promiseResult: Promise<Result<T, F>> = somePromise
+        .then(t => ok<T, F>(t))
+        .catch(e => {
+            if (onError) return err(onError(e));
+            return err(e);
+        });
+
+    return new ResultAsync(promiseResult);
+};
+
 export class ResultAsync<A, E> implements PromiseLike<Result<A, E>> {
     constructor(private promise: Promise<Result<A, E>>) {}
 
@@ -35,16 +46,4 @@ export class ResultAsync<A, E> implements PromiseLike<Result<A, E>> {
     }
 }
 
-export namespace ResultAsync {
-    // prettier-ignore
-    export function fromPromise<T, F>(somePromise: Promise<T>, onError?: (e: unknown) => F) {
-    const promiseResult: Promise<Result<T, F>> = somePromise
-      .then(t => ok<T, F>(t))
-      .catch(e => {
-        if (onError) return err(onError(e));
-        return err(e);
-      });
-
-    return new ResultAsync(promiseResult);
-  }
-}
+export namespace ResultAsync {}
