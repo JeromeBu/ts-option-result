@@ -1,3 +1,5 @@
+import { err, ok } from "./result";
+import type { Result } from "./result";
 import { curry } from "./utils";
 
 export interface OptionCases<A, B> {
@@ -12,6 +14,7 @@ export interface Option<A> {
     caseOf: <B>(cases: OptionCases<A, B>) => B;
     getOrElse: (f: () => A) => A;
     getOrNull: () => A | null;
+    toResult: <E>(error: E) => Result<A, E>;
 }
 
 export const some = <A>(a: A) => new Some(a);
@@ -47,6 +50,10 @@ export class Some<A> implements Option<A> {
     public isNone() {
         return false;
     }
+
+    public toResult<E>(_: E): Result<A, E> {
+        return ok(this.value);
+    }
 }
 
 export class None implements Option<never> {
@@ -72,6 +79,10 @@ export class None implements Option<never> {
 
     public isNone() {
         return true;
+    }
+
+    public toResult<E>(error: E): Result<never, E> {
+        return err(error);
     }
 }
 
@@ -108,5 +119,11 @@ export namespace Option {
     // prettier-ignore
     export function caseOf<A, B>(cases: OptionCases<A, B>, optA?: Option<A>): any {
         return curry(option => option.caseOf(cases), optA);
+    }
+
+    export function toResult<A, E>(error: E, optA: Option<A>): Result<A, E>;
+    export function toResult<A, E>(error: E): (optA: Option<A>) => Result<A, E>;
+    export function toResult<A, E>(error: E, optA?: Option<A>): any {
+        return curry((option: Option<A>) => option.toResult(error), optA);
     }
 }

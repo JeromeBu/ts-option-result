@@ -1,12 +1,15 @@
 import { none, Option, some } from "..";
 import { pipe } from "ramda";
 import { fromNullable } from "../lib/option";
+import { expectErr, expectOk } from "./helpers";
 
 describe("Option", () => {
     describe("methods", () => {
         it("construct some and none", () => {
             expect(some(12).getOrNull()).toBe(12);
+            expect(some(12).isNone()).toBe(false);
             expect(none().getOrNull()).toBeNull();
+            expect(none().isNone()).toBe(true);
         });
 
         it("from nullable", () => {
@@ -65,6 +68,13 @@ describe("Option", () => {
                 }),
             ).toBe(0);
         });
+
+        it("toResult", () => {
+            const someString = some("my str");
+            const noneString: Option<string> = none();
+            expectOk(someString.toResult("No string"), "my str");
+            expectErr(noneString.toResult("No string"), "No string");
+        });
     });
 
     describe("namespace functions", () => {
@@ -104,6 +114,15 @@ describe("Option", () => {
             );
             expect(lengthOfString(optionA)).toBe(4);
             expect(lengthOfString(none())).toBe(0);
+        });
+
+        it("toResult", () => {
+            const someString = some("my str");
+            const noneString: Option<string> = none();
+            const toResultWithErr = Option.toResult<string, string>("No string");
+            expectOk(toResultWithErr(someString), "my str");
+            expectOk(Option.toResult("No string", someString), "my str");
+            expectErr(toResultWithErr(noneString), "No string");
         });
     });
 });
