@@ -13,14 +13,14 @@ export interface IResult<A, E> {
     caseOf: <B>(cases: ResultCases<A, E, B>) => B;
 
     /**
-     * Carefull, this will throw if Result is Err
+     * Careful, this will throw if Result is Err
      */
     getOrThrow: () => A;
 
     /**
-     * Carefull, this will throw if Result is Ok
+     * Careful, this will throw if Result is Ok
      */
-    getErrorOrThrow: () => E;
+    _getErrorOrThrow: () => E;
 }
 
 export const ok = <A, E>(value?: A): Ok<A, E> => new Ok(value as A);
@@ -55,7 +55,10 @@ export class Ok<A, E> implements IResult<A, E> {
         return this.value;
     }
 
-    public getErrorOrThrow(): E {
+    /**
+     * Careful, this will throw if Result is Ok
+     */
+    public _getErrorOrThrow(): E {
         throw new Error("Cannot get error on Ok value");
     }
 }
@@ -87,7 +90,10 @@ export class Err<A, E> implements IResult<A, E> {
         throw this.error;
     }
 
-    public getErrorOrThrow(): E {
+    /**
+     * Careful, this will throw if Result is Ok
+     */
+    public _getErrorOrThrow(): E {
         return this.error;
     }
 }
@@ -138,7 +144,7 @@ export const combine = <T extends { [key in string]: Result<unknown, unknown> }>
     resultsObject: T,
 ): Result<DictionaryOfOkValues<T>, InferErrors<T>> => {
     for (const result of Object.values(resultsObject)) {
-        if (result.isErr()) return err(result.getErrorOrThrow()) as any;
+        if (result.isErr()) return err(result._getErrorOrThrow()) as any;
     }
 
     return ok(

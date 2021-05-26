@@ -10,6 +10,15 @@ describe("Result", () => {
             expectErr(err("some failure"), "some failure");
         });
 
+        it("getOrThrow", () => {
+            expect(ok(10).getOrThrow()).toBe(10);
+            expect(() => err("some failure").getOrThrow()).toThrowError("some failure");
+        });
+        it("_getErrorOrThrow", () => {
+            expect(() => ok(10)._getErrorOrThrow()).toThrowError("Cannot get error on Ok value");
+            expect(err("some failure")._getErrorOrThrow()).toBe("some failure");
+        });
+
         it("isOk", () => {
             expect(ok(10).isOk()).toBe(true);
             expect(err("some failure").isOk()).toBe(false);
@@ -44,6 +53,11 @@ describe("Result", () => {
             expectErr(
                 okStr.flatMap(_ => err("string is to short")),
                 "string is to short",
+            );
+
+            expectErr(
+                err<string, string>("a failure").flatMap(a => ok(a.length)),
+                "a failure",
             );
         });
 
