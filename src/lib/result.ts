@@ -93,6 +93,13 @@ export class Err<A, E> implements IResult<A, E> {
 }
 
 export namespace Result {
+    export const fromNullable =
+        <A, E>(error: E) =>
+        (value: A | undefined | null): Result<A, E> => {
+            if (value === null || value === undefined) return err(error);
+            return ok(value);
+        };
+
     export function map<A, E, B>(f: (a: A) => B, a: Result<A, E>): Result<B, E>;
     // prettier-ignore
     export function map<A, E, B>(f: (a: A) => B): (a: Result<A, E>) => Result<B, E>;
@@ -118,3 +125,29 @@ export namespace Result {
     return curry(result => result.caseOf(cases), resA);
   }
 }
+
+type DictionaryOfResults = { [key in string]: Result<unknown, unknown> };
+type DictionaryOfOkValues<T extends DictionaryOfResults> = {
+    [K in keyof T]: T[K] extends Result<infer A, unknown> ? A : never;
+};
+type InferErrors<T extends DictionaryOfResults> = T[keyof T] extends Result<unknown, infer E>
+    ? E
+    : never;
+
+export const combine = <T extends { [key in string]: Result<unknown, unknown> }>(
+    resultsObject: T,
+): Result<DictionaryOfOkValues<T>, InferErrors<T>> => {
+    for (const result of Object.values(resultsObject)) {
+        if (result.isErr()) return err(result.getErrorOrThrow()) as any;
+    }
+
+    return ok(
+        Object.keys(resultsObject).reduce(
+            (acc, key) => ({
+                ...acc,
+                [key]: resultsObject[key].getOrThrow(),
+            }),
+            {} as DictionaryOfOkValues<T>,
+        ),
+    );
+};

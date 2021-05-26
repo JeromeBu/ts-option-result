@@ -1,5 +1,5 @@
 import { pipe } from "ramda";
-import { err, ok, Result } from "..";
+import { err, ok, Result, combine } from "..";
 
 import { expectErr, expectOk } from "./helpers";
 
@@ -64,6 +64,14 @@ describe("Result", () => {
         });
     });
     describe("namespace functions", () => {
+        it("from nullable", () => {
+            const str = "yo" as string | null;
+            const nullStr = null as string | null;
+
+            const partiallyExecutedFromNullable = Result.fromNullable("something wrong");
+            expectOk(partiallyExecutedFromNullable(str), "yo");
+            expectErr(partiallyExecutedFromNullable(nullStr), "something wrong");
+        });
         it("map", () => {
             const okStr: Result<string, Error> = ok("yolo");
             const isLongEnough = pipe<
@@ -114,5 +122,17 @@ describe("Result", () => {
             expect(goodOrBad(okA)).toBe("Good 2");
             expect(goodOrBad(badB)).toBe("Bad mistake");
         });
+    });
+
+    it("combine results", () => {
+        const okA: Result<number, "error A"> = ok(10);
+        const okB: Result<boolean, "error B"> = ok(true);
+        const errA: Result<number, "error A"> = err("error A");
+        const errB: Result<boolean, "error B"> = err("error B");
+
+        expectOk(combine({ resultA: okA, resultB: okB }), { resultA: 10, resultB: true });
+        expectErr(combine({ resultA: okA, resultB: errB }), "error B");
+        expectErr(combine({ resultA: errA, resultB: okB }), "error A");
+        expectErr(combine({ resultA: errA, resultB: errB }), "error A");
     });
 });
