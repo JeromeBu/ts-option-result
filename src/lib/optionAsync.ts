@@ -26,6 +26,10 @@ export class OptionAsync<A> implements PromiseLike<Option<A>> {
         );
     }
 
+    public caseOf<B>(cases: OptionCases<A, B>): Promise<B> {
+        return this.promise.then(Option.caseOf(cases)).catch(cases.none);
+    }
+
     public getOrNull(): Promise<A | null> {
         return this.promise.then(Option.getOrNull);
     }
@@ -33,15 +37,6 @@ export class OptionAsync<A> implements PromiseLike<Option<A>> {
     public getOrElse(f: () => A): Promise<A> {
         return this.promise.then(Option.getOrElse(f));
     }
-
-    public caseOf<B>(cases: OptionCases<A, B>): Promise<B> {
-        return this.promise.then(Option.caseOf(cases)).catch(cases.none);
-    }
-
-    // flatMap: <B>(f: (a: A) => OptionAsync<B>) => OptionAsync<B>;
-    // getOrElse: (f: () => A) => A;
-    // getOrNull: () => A | null;
-    // caseOf: <B>(cases: OptionCases<A, B>) => B;
 }
 
 export const someAsync = <A>(a: A) => new OptionAsync(Promise.resolve(some(a)));

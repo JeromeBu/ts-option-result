@@ -23,35 +23,35 @@ $ npm install --save ts-option-result
 
 ## Option
 
-### Constructors
+### [Constructors](#option---constructors)
 
--   some
--   none
--   fromNullable
+-   some `T => Some<T>`
+-   none `() => None`
+-   fromNullable `(T | null | undefined) => Option<T>`
 
-### Functions and methods
+### [Functions and methods](#option---function-and-instance-methods)
 
--   isNone
--   map
--   flatMap
--   caseOf
--   getOrElse
--   getOrNull
+-   [isNone](#option---isnone) `Option<A> -> boolean`
+-   [map](#option---map) `(f: A => B) -> Option<A> -> Option<B>`
+-   [flatMap](#option---flatmap) `(f: A => Option<B>) -> Option<A> -> Option<B>`
+-   [caseOf](#option---caseof) `({some: A => B, none: () => B}) -> Option<A> -> B`
+-   [getOrElse](#option---getorelse) `(f: () => A) -> Option<A> -> A`
+-   [getOrNull](#option---getornull) `Option<A> -> A | null`
 
 ## OptionAsync
 
-### Constructor
+### [Constructors](#optionasync---constructors)
 
--   someAsync
--   noneAsync
+-   someAsync `A => OptionAsync<A>`
+-   noneAsync `() => OptionAsync<A>`
 
-### Functions and methods
+### [Functions and methods](#optionasync---function-and-instance-methods)
 
--   map
--   flatMap
--   caseOf
--   getOrElse
--   getOrNull
+-   [map](#optionasync---map) `(f: A => B) -> OptionAsync<A> -> OptionAsync<B>`
+-   [flatMap](#optionasync---flatmap) `(f: A => Option<B> | OptionAsync<B>) -> OptionAsync<A> -> OptionAsync<B>`
+-   [caseOf](#optionasync---caseof) `({some: A => B, none: () => B}) -> OptionAsync<A> -> Promise<B>`
+-   [getOrElse](#optionasync---getorelse) `(f: () => B) -> OptionAsync<A> -> Promise<B>`
+-   [getOrNull](#optionasync---getornull) `OptionAsync<A> -> Promise<A | null>`
 
 ## Result
 
@@ -82,11 +82,65 @@ $ npm install --save ts-option-result
 
 -   map
 -   flatMap
--   TODO : ...still to methods to be added...
+-   TODO : ...still to methods to be added..
+
+Most methods have an equivalent function, which is curried. The usage depends on weather you like chaining methods or piping functions. The pipe function used below is the one from [Ramda](https://ramdajs.com/docs/#pipe)
+
+```typescript
+const optionAge = some(25);
+
+class NoEmailFoundError extends Error {}
+class NoAgeProvidedError extends Error {}
+class NotOldEnoughError extends Error {}
+let getEmail: () => Result<string, NoEmailFoundError>;
+
+// Method chaining:
+optionAge // Option<number>
+    .toResult(new NoAgeProvidedError()) // Result<number, NoAgeProvidedError>
+    .flatMap((age): Result<number, NotOldEnoughError> => {
+        if (age < 20) return err(new NotOldEnoughError());
+        return ok(age);
+    }) // Result<number, NoAgeProvidedError | NotOldEnoughError>
+    .flatMap(oldEnoughAge =>
+        getEmail().map(email => ({
+            email,
+            age: oldEnoughAge,
+        })),
+    ) // Result<{email: string, age: number}, NoAgeProvidedError | NotOldEnoughError | NoEmailFoundError>
+    .caseOf({
+        ok: user => `User with ${user.email} email, is ${user.age} years old`,
+        err: err => `Something wrong happened: ${err.message}`,
+    }); // string
+
+// Equivalent with pipe :
+pipe<
+    Option<number>,
+    Result<number, NoAgeProvidedError>,
+    Result<number, NoAgeProvidedError | NotOldEnoughError>,
+    Result<{ email: string; age: number }, NoAgeProvidedError | NotOldEnoughError | NoEmailFoundError>,
+    string
+>(
+    Option.toResult(new NoAgeProvidedError()),
+    Result.flatMap((age): Result<number, NotOldEnoughError> => {
+        if (age < 20) return err(new NotOldEnoughError());
+        return ok(age);
+    }),
+    Result.flatMap(oldEnoughAge =>
+        getEmail().map(email => ({
+            email,
+            age: oldEnoughAge,
+        })),
+    ),
+    Result.caseOf({
+        ok: user => `User with ${user.email} email, is ${user.age} years old`,
+        err: err => `Something wrong happened: ${err.message}`,
+    }),
+)(optionAge);
+```
 
 ## Option
 
-### Constructors
+### Option - Constructors
 
 `type Option<T> = Some<T> | None`
 
@@ -97,8 +151,7 @@ $ npm install --save ts-option-result
 -   `fromNullable: (T | null | undefined) => Option<T>` creates an option from a nullable of T
 
 ```typescript
-import { some, none, Option } from "ts-option-result";
-import { fromNullable } from "./option";
+import { some, none, Option, fromNullable } from "ts-option-result";
 
 const someStr: Option<string> = some("my string");
 const noneStr: Option<string> = none();
@@ -107,29 +160,40 @@ const myString = "my nullable string" as string | null | undefined;
 const optionStr = fromNullable(myString);
 ```
 
-### Function and instance methods
+### Option - Function and instance methods
 
-Option instance have several methods:
+#### Option - isNone
 
-#### map:
+`Option<A> -> boolean`
 
-function: `(f: A => B) -> Option<A> -> Option<B>`
+```typescript
+const someStr = some("my string");
+const noneStr = none();
+
+// instance method
+const isFalse = someStr.isNone();
+const isTrue = noneStr.isNone();
+```
+
+#### Option - map
+
+`(f: A => B) -> Option<A> -> Option<B>`
 
 ```typescript
 const optionStr = some("my string");
 
-// instance method
-const optionNum = optionStr.map(str => str.length); // Option<number>
-
 // curried function
 const optionNum = Option.map(str => str.length, optionStr); // Option<number>
+
+// instance method
+const optionNum = optionStr.map(str => str.length); // Option<number>
 ```
 
 <br />
 
-#### flatMap:
+#### Option - flatMap:
 
-function: `(f: A => Option<B>) -> Option<A> -> Option<B>`
+`(f: A => Option<B>) -> Option<A> -> Option<B>`
 
 ```typescript
 const optionStr = some("my string");
@@ -143,9 +207,9 @@ const optionNum = optionStr.flatMap(str => some(str.length)); // Option<number>
 
 <br />
 
-#### caseOf:
+#### Option - caseOf:
 
-function: `({some: A => B, none: () => B}) -> Option<A> -> B`
+`({some: A => B, none: () => B}) -> Option<A> -> B`
 
 ```typescript
 const optionStr = some("my string");
@@ -168,9 +232,9 @@ const lengthOfString: number = optionStr.flatMap({
 
 <br />
 
-#### getOrElse:
+#### Option - getOrElse:
 
-function: `(f: () => A) -> Option<A> -> A`
+`(f: () => A) -> Option<A> -> A`
 
 ```typescript
 const optionStr = some("my string");
@@ -184,9 +248,9 @@ const myString = optionStr.getOrElse(() => "No string");
 
 <br />
 
-#### getOrNull:
+#### Option - getOrNull:
 
-function: `Option<A> -> A | null`
+`Option<A> -> A | null`
 
 ```typescript
 const optionStr = some("my string");
@@ -204,7 +268,117 @@ const myNull = none().getOrNull(); // const myNull = null
 
 ## OptionAsync
 
-TODO: write documentation
+OptionAsync is a wrapper around promises. It is similar to Promise<Option<A>> with extra methods.
+You can await OptionAsync just like a promise.
+
+### OptionAsync - Constructors
+
+-   `someAsync: T => OptionAsync<T>`
+-   `noneAsync: () => OptionAsync<T>`
+
+```typescript
+import { someAsync, noneAsync, OptionAsync } from "ts-option-result";
+
+const someAsyncStr: OptionAsync<string> = someAsync("my string");
+const noneAsyncStr: OptionAsync<string> = noneAsync();
+```
+
+<br/>
+
+### OptionAsync - Function and instance methods
+
+#### OptionAsync - map
+
+`(f: A => B) -> OptionAsync<A> -> OptionAsync<B>`
+
+```typescript
+const someAsyncStr = someAsync("my string");
+
+// curried function
+const optionAsyncNum = OptionAsync.map(str => str.length, someAsyncStr);
+
+// instance method
+const optionAsyncNum = someAsyncStr.map(str => str.length);
+```
+
+<br/>
+
+#### OptionAsync - flatMap
+
+`(f: A => Option<B> | OptionAsync<B>) -> OptionAsync<A> -> OptionAsync<B>`
+
+The function provided to flatMap can either return Option<B> or OptionAsync<B>
+
+```typescript
+const someAsyncStr = someAsync("my string");
+
+// curried function
+const optionAsyncNum = OptionAsync.map(str => some(str.length), someAsyncStr);
+
+// instance method
+const optionAsyncNum = someAsyncStr.map(str => someAsync(str.length));
+```
+
+<br/>
+
+#### OptionAsync - caseOf
+
+`({some: A => B, none: () => B}) -> OptionAsync<A> -> Promise<B>`
+
+The function provided to flatMap can either return Option<B> or OptionAsync<B>
+
+```typescript
+const optionAsyncStr = someAsync("my string");
+
+// curried function
+const lengthOfString: Promise<number> = OptionAsync.caseOf(
+    {
+        some: str => str.length,
+        none: () => 0,
+    },
+    optionAsyncStr,
+);
+
+// instance method
+const lengthOfString: Promise<number> = optionStr.flatMap({
+    some: str => str.length,
+    none: () => 0,
+});
+```
+
+<br/>
+
+#### OptionAsync - getOrElse
+
+`(f: () => B) -> OptionAsync<A> -> Promise<B>`
+
+```typescript
+const someAsyncStr = someAsync("my string");
+
+// curried function
+const optionAsyncNum = OptionAsync.getOrElse(() => "No string", someAsyncStr);
+
+// instance method
+const optionAsyncNum = someAsyncStr.getOrElse(() => "No string");
+```
+
+<br/>
+
+#### OptionAsync - getOrNull
+
+`OptionAsync<A> -> Promise<A | null>`
+
+```typescript
+const someAsyncStr = someAsync("my string");
+
+// curried function
+const optionAsyncNum = OptionAsync.getOrNull(someAsyncStr);
+
+// instance method
+const optionAsyncNum = someAsyncStr.getOrNull();
+```
+
+<br/>
 
 ## Result
 
