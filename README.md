@@ -19,6 +19,64 @@ Result and ResultAsync are used for error handling in a descriptive and type saf
 $ npm install --save ts-option-result
 ```
 
+## Usage example
+
+Most methods have an equivalent function, which is curried.
+The usage depends on weather you like chaining methods or piping functions.
+The pipe function used below is the one from [Ramda](https://ramdajs.com/docs/#pipe)
+
+```typescript
+const optionAge = some(25);
+
+class NoEmailFoundError extends Error {}
+class NoAgeProvidedError extends Error {}
+class NotOldEnoughError extends Error {}
+let getEmail: () => Result<string, NoEmailFoundError>;
+
+// Usage with methods chaining:
+optionAge // Option<number>
+    .toResult(new NoAgeProvidedError()) // Result<number, NoAgeProvidedError>
+    .flatMap((age): Result<number, NotOldEnoughError> => {
+        if (age < 20) return err(new NotOldEnoughError());
+        return ok(age);
+    }) // Result<number, NoAgeProvidedError | NotOldEnoughError>
+    .flatMap(oldEnoughAge =>
+        getEmail().map(email => ({
+            email,
+            age: oldEnoughAge,
+        })),
+    ) // Result<{email: string, age: number}, NoAgeProvidedError | NotOldEnoughError | NoEmailFoundError>
+    .caseOf({
+        ok: user => `User with ${user.email} email, is ${user.age} years old`,
+        err: err => `Something wrong happened: ${err.message}`,
+    }); // string
+
+// Usage with piping (pipe function from ramda):
+pipe<
+    Option<number>,
+    Result<number, NoAgeProvidedError>,
+    Result<number, NoAgeProvidedError | NotOldEnoughError>,
+    Result<{ email: string; age: number }, NoAgeProvidedError | NotOldEnoughError | NoEmailFoundError>,
+    string
+>(
+    Option.toResult(new NoAgeProvidedError()),
+    Result.flatMap((age): Result<number, NotOldEnoughError> => {
+        if (age < 20) return err(new NotOldEnoughError());
+        return ok(age);
+    }),
+    Result.flatMap(oldEnoughAge =>
+        getEmail().map(email => ({
+            email,
+            age: oldEnoughAge,
+        })),
+    ),
+    Result.caseOf({
+        ok: user => `User with ${user.email} email, is ${user.age} years old`,
+        err: err => `Something wrong happened: ${err.message}`,
+    }),
+)(optionAge);
+```
+
 # API
 
 ## Option
@@ -55,20 +113,20 @@ $ npm install --save ts-option-result
 
 ## Result
 
-### Constructors:
+### [Constructors](#option---constructors)
 
 -   ok
 -   err
 
-### Functions and methods
+### [Functions and methods](#result---function-and-instance-methods)
 
--   isOk
--   isErr
--   map
--   flatMap
--   caseOf
--   getOrThrow
--   getErrorOrThrow
+-   [isOk](#result---isok)
+-   [isErr](#result---iserr)
+-   [map](#result---map)
+-   [flatMap](#result---flatmap)
+-   [caseOf](#result---caseof)
+-   [getOrThrow](#result---getorthrow)
+-   [getErrorOrThrow](#result---geterrororthrow)
 
 ## ResultAsync
 
@@ -82,61 +140,7 @@ $ npm install --save ts-option-result
 
 -   map
 -   flatMap
--   TODO : ...still to methods to be added..
-
-Most methods have an equivalent function, which is curried. The usage depends on weather you like chaining methods or piping functions. The pipe function used below is the one from [Ramda](https://ramdajs.com/docs/#pipe)
-
-```typescript
-const optionAge = some(25);
-
-class NoEmailFoundError extends Error {}
-class NoAgeProvidedError extends Error {}
-class NotOldEnoughError extends Error {}
-let getEmail: () => Result<string, NoEmailFoundError>;
-
-// Method chaining:
-optionAge // Option<number>
-    .toResult(new NoAgeProvidedError()) // Result<number, NoAgeProvidedError>
-    .flatMap((age): Result<number, NotOldEnoughError> => {
-        if (age < 20) return err(new NotOldEnoughError());
-        return ok(age);
-    }) // Result<number, NoAgeProvidedError | NotOldEnoughError>
-    .flatMap(oldEnoughAge =>
-        getEmail().map(email => ({
-            email,
-            age: oldEnoughAge,
-        })),
-    ) // Result<{email: string, age: number}, NoAgeProvidedError | NotOldEnoughError | NoEmailFoundError>
-    .caseOf({
-        ok: user => `User with ${user.email} email, is ${user.age} years old`,
-        err: err => `Something wrong happened: ${err.message}`,
-    }); // string
-
-// Equivalent with pipe :
-pipe<
-    Option<number>,
-    Result<number, NoAgeProvidedError>,
-    Result<number, NoAgeProvidedError | NotOldEnoughError>,
-    Result<{ email: string; age: number }, NoAgeProvidedError | NotOldEnoughError | NoEmailFoundError>,
-    string
->(
-    Option.toResult(new NoAgeProvidedError()),
-    Result.flatMap((age): Result<number, NotOldEnoughError> => {
-        if (age < 20) return err(new NotOldEnoughError());
-        return ok(age);
-    }),
-    Result.flatMap(oldEnoughAge =>
-        getEmail().map(email => ({
-            email,
-            age: oldEnoughAge,
-        })),
-    ),
-    Result.caseOf({
-        ok: user => `User with ${user.email} email, is ${user.age} years old`,
-        err: err => `Something wrong happened: ${err.message}`,
-    }),
-)(optionAge);
-```
+-   caseOf
 
 ## Option
 
@@ -269,7 +273,7 @@ const myNull = none().getOrNull(); // const myNull = null
 ## OptionAsync
 
 OptionAsync is a wrapper around promises. It is similar to Promise<Option<A>> with extra methods.
-You can await OptionAsync just like a promise.
+You can use `then` and `await` on OptionAsync just like a promise.
 
 ### OptionAsync - Constructors
 
@@ -295,10 +299,10 @@ const noneAsyncStr: OptionAsync<string> = noneAsync();
 const someAsyncStr = someAsync("my string");
 
 // curried function
-const optionAsyncNum = OptionAsync.map(str => str.length, someAsyncStr);
+const resultAsyncNum = OptionAsync.map(str => str.length, someAsyncStr);
 
 // instance method
-const optionAsyncNum = someAsyncStr.map(str => str.length);
+const resultAsyncNum = someAsyncStr.map(str => str.length);
 ```
 
 <br/>
@@ -313,10 +317,10 @@ The function provided to flatMap can either return Option<B> or OptionAsync<B>
 const someAsyncStr = someAsync("my string");
 
 // curried function
-const optionAsyncNum = OptionAsync.map(str => some(str.length), someAsyncStr);
+const resultAsyncNum = OptionAsync.map(str => some(str.length), someAsyncStr);
 
 // instance method
-const optionAsyncNum = someAsyncStr.map(str => someAsync(str.length));
+const resultAsyncNum = someAsyncStr.map(str => someAsync(str.length));
 ```
 
 <br/>
@@ -328,7 +332,7 @@ const optionAsyncNum = someAsyncStr.map(str => someAsync(str.length));
 The function provided to flatMap can either return Option<B> or OptionAsync<B>
 
 ```typescript
-const optionAsyncStr = someAsync("my string");
+const someAsyncStr = someAsync("my string");
 
 // curried function
 const lengthOfString: Promise<number> = OptionAsync.caseOf(
@@ -336,11 +340,11 @@ const lengthOfString: Promise<number> = OptionAsync.caseOf(
         some: str => str.length,
         none: () => 0,
     },
-    optionAsyncStr,
+    someAsyncStr,
 );
 
 // instance method
-const lengthOfString: Promise<number> = optionStr.flatMap({
+const lengthOfString: Promise<number> = someAsyncStr.caseOf({
     some: str => str.length,
     none: () => 0,
 });
@@ -356,10 +360,10 @@ const lengthOfString: Promise<number> = optionStr.flatMap({
 const someAsyncStr = someAsync("my string");
 
 // curried function
-const optionAsyncNum = OptionAsync.getOrElse(() => "No string", someAsyncStr);
+const resultAsyncNum = OptionAsync.getOrElse(() => "No string", someAsyncStr);
 
 // instance method
-const optionAsyncNum = someAsyncStr.getOrElse(() => "No string");
+const resultAsyncNum = someAsyncStr.getOrElse(() => "No string");
 ```
 
 <br/>
@@ -372,18 +376,216 @@ const optionAsyncNum = someAsyncStr.getOrElse(() => "No string");
 const someAsyncStr = someAsync("my string");
 
 // curried function
-const optionAsyncNum = OptionAsync.getOrNull(someAsyncStr);
+const resultAsyncNum = OptionAsync.getOrNull(someAsyncStr);
 
 // instance method
-const optionAsyncNum = someAsyncStr.getOrNull();
+const resultAsyncNum = someAsyncStr.getOrNull();
 ```
 
 <br/>
 
 ## Result
 
-TODO: write documentation
+### Result - Constructors
+
+`type Result<A, E> = Ok<A, E> | Err<A, E>`
+
+`Result` can either be `Ok<A, E>` or `Err<A, E>`, there are 2 constructors.
+
+-   `ok: A => Ok<A, unknown>` creates a `Ok<A, unknown>` instance
+-   `err: E => Err<unknown, E>`
+
+```typescript
+import { ok, err, Result } from "ts-option-result";
+
+const okStr = ok("my string");
+const errStr = err("some error");
+
+// you can provide an expected type for the E or T :
+const okNum: Result<number, string> = ok(10);
+const errNum: Result<number, string> = err("some error");
+```
+
+<br/>
+
+### Result - Function and instance methods
+
+#### Result - isOk
+
+`Option<A> -> boolean`
+
+```typescript
+const okStr = ok("my string");
+const errStr = err();
+
+// instance method
+const thisIsTrue = okStr.isOk();
+const thisIsFalse = errStr.isOk();
+```
+
+<br />
+
+#### Result - isErr
+
+`Result<A, E> -> boolean`
+
+```typescript
+const okStr = ok("my string");
+const errStr = err();
+
+// instance method
+const thisIsFalse = okStr.isErr();
+const thisIsTrue = errStr.isErr();
+```
+
+<br/>
+
+#### Result - map
+
+`(f: A => B) -> Result<A, E> -> Result<B, E>`
+
+```typescript
+const okStr: Result<string, string> = ok("my string");
+
+// curried function
+const okNum = Result.map(str => str.length, okStr); // Result<number, string>
+
+// instance method
+const okNum = okStr.map(str => str.length); // Result<number, string>
+```
+
+#### Result - flatMap
+
+`(f: A => Result<B, F>) -> Result<A, E> -> Result<B, E | F>`
+
+```typescript
+const okStr: Result<string, "anError"> = ok("my string");
+
+// curried function
+const okNum = Result.flatMap(str => {
+    if (str.length > 2) return ok(str.length);
+    return err("NotLongEnough");
+}, okStr); // Result<number, "anError" | "NotLongEnough">
+
+// instance method
+const okNum = okStr.flatMap(str => {
+    if (str.length > 2) return ok(str.length);
+    return err("NotLongEnough");
+}); // Result<number, "anError" | "NotLongEnough">
+```
+
+<br/>
+
+#### Result - caseOf:
+
+`({ok: A => B, err: () => B}) -> Result<A, E> -> B`
+
+```typescript
+const okStr: Result<string, string> = some("my string");
+
+// curried function
+const lengthOfString: number = Result.caseOf(
+    {
+        ok: str => str.length,
+        err: e => {
+            console.error("Error : " + e);
+            return 0;
+        },
+    },
+    okStr,
+);
+
+// instance method
+const lengthOfString: number = okStr.caseOf({
+    ok: str => str.length,
+    err: e => {
+        console.error("Error : " + e);
+        return 0;
+    },
+});
+```
+
+<br />
 
 ## ResultAsync
 
-TODO: write documentation
+ResultAsync is a wrapper around promises. It is similar to Promise<Result<A, E>> with extra methods.
+You can use `then` and `await` on ResultAsync just like a promise.
+
+### ResultAsync - Constructors
+
+-   `okAsync: T => ResultAsync<T, unknown>`
+-   `errAsync: E => ResultAsync<unknown, E>`
+
+```typescript
+import { okAsync, noneAsync, ResultAsync } from "ts-option-result";
+
+const okAsyncStr: ResultAsync<string> = okAsync("my string");
+const noneAsyncStr: ResultAsync<string> = noneAsync();
+```
+
+<br/>
+
+### ResultAsync - Function and instance methods
+
+#### ResultAsync - map
+
+`(f: A => B) -> ResultAsync<A, E> -> ResultAsync<B, E>`
+
+```typescript
+const okAsyncStr = okAsync("my string");
+
+// curried function
+const resultAsyncNum = ResultAsync.map(str => str.length, okAsyncStr);
+
+// instance method
+const resultAsyncNum = okAsyncStr.map(str => str.length);
+```
+
+<br/>
+
+#### ResultAsync - flatMap
+
+`(f: A => Result<B, F> | ResultAsync<B, F>) -> ResultAsync<A, E> -> ResultAsync<B, E | F>`
+
+The function provided to flatMap can either return Result<B, F> or ResultAsync<B, F>
+
+```typescript
+const okAsyncStr = okAsync("my string");
+
+// curried function
+const resultAsyncNum = ResultAsync.map(str => some(str.length), okAsyncStr);
+
+// instance method
+const resultAsyncNum = okAsyncStr.map(str => okAsync(str.length));
+```
+
+<br/>
+
+#### ResultAsync - caseOf
+
+`({ok: A => B, err: () => B}) -> ResultAsync<A, E> -> Promise<B>`
+
+```typescript
+const okAsyncStr = okAsync("my string");
+
+// curried function
+const lengthOfString: Promise<number> = ResultAsync.caseOf(
+    {
+        ok: str => str.length,
+        err: e => {
+            console.error(e);
+            return 0;
+        },
+    },
+    okAsyncStr,
+);
+
+// instance method
+const lengthOfString: Promise<number> = okAsyncStr.caseOf({
+    ok: str => str.length,
+    err: () => 0,
+});
+```
+
+<br/>
