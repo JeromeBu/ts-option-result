@@ -113,7 +113,7 @@ pipe<
 
 ## Result
 
-### [Constructors](#option---constructors)
+### [Constructors](#result---constructors)
 
 -   ok
 -   err
@@ -130,17 +130,17 @@ pipe<
 
 ## ResultAsync
 
-### Constructors:
+### [Constructors](#resultasync---constructors)
 
--   someAsync
--   noneAsync
--   fromPromise
+-   okAsync
+-   errAsync
+-   [fromPromise](#resultasync---constructors)
 
 ### Functions and methods
 
--   map
--   flatMap
--   caseOf
+-   [map](#resultasync---map)
+-   [flatMap](#resultasync---flatmap)
+-   [caseOf](#resultasync---caseof)
 
 ## Option
 
@@ -507,6 +507,42 @@ const lengthOfString: number = okStr.caseOf({
 
 <br />
 
+#### Result - getOrThrow
+
+`Result<A, E> -> Promise<A>` (but may also throw E)
+
+```typescript
+const okStr = ok("my string");
+const errStr: Result<number, string> = err("FAILURE !");
+
+// curried function
+const num = Result.getOrThrow(okStr); // returns "my string"
+Result.getOrThrow(errStr); // throws "FAILURE !"
+
+// instance method
+const okNum = okStr.getOrThrow(); // returns "my string";
+errStr.getOrThrow(); // throws "FAILURE !"
+```
+
+#### Result - getErrorOrThrow
+
+`Result<A, E> -> Promise<E>` (but may also throw E)
+
+Careful with this, as it will throw on OK values. It should only be used after an `isErr` check.
+
+```typescript
+const okStr = ok("my string");
+const errStr: Result<number, string> = err("My error");
+
+// curried function
+Result._getErrorOrThrow(okStr); // throws "Cannot get error on Ok value"
+const stringInErr = Result._getErrorOrThrow(errStr); // returns "My error"
+
+// instance method
+okStr._getErrorOrThrow(); // throws "Cannot get error on Ok value"
+const stringInErr = errStr._getErrorOrThrow(); // returns "My error"
+```
+
 ## ResultAsync
 
 ResultAsync is a wrapper around promises. It is similar to Promise<Result<A, E>> with extra methods.
@@ -516,12 +552,19 @@ You can use `then` and `await` on ResultAsync just like a promise.
 
 -   `okAsync: T => ResultAsync<T, unknown>`
 -   `errAsync: E => ResultAsync<unknown, E>`
+-   `fromPromise: Promise<A> => ResultAsync<A, unknown> -- or -- (Promise<A>, errHandler: () => F) => ResultAsync<A, F>`
 
 ```typescript
-import { okAsync, noneAsync, ResultAsync } from "ts-option-result";
+import { okAsync, noneAsync, ResultAsync, fromPromise } from "ts-option-result";
 
 const okAsyncStr: ResultAsync<string> = okAsync("my string");
 const noneAsyncStr: ResultAsync<string> = noneAsync();
+
+const resolveStr = Promise.resolve("myStr");
+const okAsyncStr = fromPromise(resolveStr);
+
+const rejectStr: Promise<string> = Promise.reject("failure");
+const errAsyncStr = fromPromise(rejectStr2, e => "error was " + e);
 ```
 
 <br/>
