@@ -1,5 +1,6 @@
 import { none, Option, some, noneAsync, OptionAsync, someAsync } from "..";
 import { pipe } from "ramda";
+import { expectOkAsync } from "./helpers";
 
 describe("OptionAsync", () => {
     describe("methods", () => {
@@ -102,6 +103,17 @@ describe("OptionAsync", () => {
 
             expect(await checkLengthOver2(optionA)).toBe(true);
             expect(await checkLengthOver2(noneAsync())).toBe(false);
+        });
+
+        it("getOrElse", async () => {
+            const getOr0 = OptionAsync.getOrElse(() => 0);
+            expect(await getOr0(someAsync(12))).toBe(12);
+            expect(await getOr0(noneAsync())).toBe(0);
+        });
+
+        it("getOrNull", async () => {
+            expect(await OptionAsync.getOrNull(someAsync(12))).toBe(12);
+            expect(await OptionAsync.getOrNull(noneAsync())).toBe(null);
         });
     });
 });

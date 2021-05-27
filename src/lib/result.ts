@@ -140,9 +140,14 @@ type InferErrors<T extends DictionaryOfResults> = T[keyof T] extends Result<unkn
     ? E
     : never;
 
+type ResultWrapsDictionary<T extends DictionaryOfResults> = Result<
+    DictionaryOfOkValues<T>,
+    InferErrors<T>
+>;
+
 export const combine = <T extends { [key in string]: Result<unknown, unknown> }>(
     resultsObject: T,
-): Result<DictionaryOfOkValues<T>, InferErrors<T>> => {
+): ResultWrapsDictionary<T> => {
     for (const result of Object.values(resultsObject)) {
         if (result.isErr()) return err(result._getErrorOrThrow()) as any;
     }
