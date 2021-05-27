@@ -119,8 +119,8 @@ export namespace Result {
     export function flatMap<A, E, B, F>(f: (a: A) => Result<B, F>): (a: Result<A, E>) => Result<B, E | F>;
     // prettier-ignore
     export function flatMap<A, E, B, F>(f: (a: A) => Result<B, F>, optA?: Result<A, E>): any {
-    return curry((result: Result<A, E>) => result.flatMap(f), optA);
-  }
+        return curry((result: Result<A, E>) => result.flatMap(f), optA);
+    }
 
     // prettier-ignore
     export function caseOf<A, E, B>(cases: ResultCases<A, E, B>, resA: Result<A, E>): B
@@ -128,8 +128,8 @@ export namespace Result {
     export function caseOf<A, E, B>(cases: ResultCases<A, E, B>): (resA: Result<A, E>) => B
     // prettier-ignore
     export function caseOf<A, E, B>(cases: ResultCases<A, E, B>, resA?: Result<A, E>): any {
-    return curry(result => result.caseOf(cases), resA);
-  }
+        return curry(result => result.caseOf(cases), resA);
+    }
 }
 
 type DictionaryOfResults = { [key in string]: Result<unknown, unknown> };

@@ -1,6 +1,5 @@
-import { none, Option, some } from "..";
+import { none, Option, some, fromNullable } from "..";
 import { pipe } from "ramda";
-import { fromNullable } from "../lib/option";
 import { expectErr, expectOk } from "./helpers";
 
 describe("Option", () => {

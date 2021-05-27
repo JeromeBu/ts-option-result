@@ -1,8 +1,8 @@
-import { err, ok, Result } from "./result";
+import { err, ok, Result, ResultCases } from "./result";
+import { curry } from "./utils";
 
 export const okAsync = <A, E>(value: A): ResultAsync<A, E> =>
     new ResultAsync(Promise.resolve(ok<A, E>(value)));
-
 export const errAsync = <A, E>(error: E): ResultAsync<A, E> =>
     new ResultAsync(Promise.resolve(err<A, E>(error)));
 
@@ -38,6 +38,10 @@ export class ResultAsync<A, E> implements PromiseLike<Result<A, E>> {
         );
     }
 
+    public caseOf<B>(cases: ResultCases<A, E, B>) {
+        return this.promise.then(a => a.caseOf(cases)).catch(cases.err);
+    }
+
     public then<B, F>(
         onFulfilled?: (result: Result<A, E>) => B | PromiseLike<B>,
         onRejected?: (reason: unknown) => F | PromiseLike<F>,
@@ -46,4 +50,29 @@ export class ResultAsync<A, E> implements PromiseLike<Result<A, E>> {
     }
 }
 
-export namespace ResultAsync {}
+export namespace ResultAsync {
+    export function map<A, E, B>(f: (a: A) => B, a: ResultAsync<A, E>): ResultAsync<B, E>;
+    // prettier-ignore
+    export function map<A, E, B>(f: (a: A) => B): (a: ResultAsync<A, E>) => ResultAsync<B, E>;
+    export function map<A, E, B>(f: (a: A) => B, resA?: ResultAsync<A, E>): any {
+        return curry((result: ResultAsync<A, E>) => result.map(f), resA);
+    }
+
+    // prettier-ignore
+    export function flatMap<A, E, B, F>(f: (a: A) => Result<B, F> | ResultAsync<B, F>, a: ResultAsync<A, E>): ResultAsync<B, E | F>;
+    // prettier-ignore
+    export function flatMap<A, E, B, F>(f: (a: A) => Result<B, F> | ResultAsync<B, F>): (a: ResultAsync<A, E>) => ResultAsync<B, E | F>;
+    // prettier-ignore
+    export function flatMap<A, E, B, F>(f: (a: A) => Result<B, F> | ResultAsync<B, F>, optA?: ResultAsync<A, E>): any {
+        return curry((resultAsync: ResultAsync<A, E>) => resultAsync.flatMap(f), optA);
+    }
+
+    // prettier-ignore
+    export function caseOf<A, E, B>(cases: ResultCases<A, E, B>, resA: ResultAsync<A, E>): Promise<B>
+    // prettier-ignore
+    export function caseOf<A, E, B>(cases: ResultCases<A, E, B>): (resA: ResultAsync<A, E>) => Promise<B>
+    // prettier-ignore
+    export function caseOf<A, E, B>(cases: ResultCases<A, E, B>, resA?: ResultAsync<A, E>): any {
+        return curry(resultAsync => resultAsync.caseOf(cases), resA);
+    }
+}
