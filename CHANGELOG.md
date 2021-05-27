@@ -1,3 +1,10 @@
+### **0.0.5** (2021-05-27)  
+  
+- add Result and ResultAsync documentation  
+- add ResultAsync caseOf, and map & flatMap stand alone functions  
+- add getOrElse and getOrNull tests to optionAsync  
+- complete optionAsync documentation and add links    
+  
 ### **0.0.4** (2021-05-26)  
   
 - move exemple out of readme  
