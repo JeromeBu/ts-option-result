@@ -1,3 +1,7 @@
+### **0.0.7** (2021-07-20)  
+  
+- remove ramda usage and create chain function inspired from fp-ts    
+  
 ### **0.0.6** (2021-07-20)  
   
 - add fromOption and fromResult to build async  
