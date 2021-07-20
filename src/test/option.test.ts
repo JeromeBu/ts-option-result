@@ -1,6 +1,6 @@
 import { none, Option, some, fromNullable } from "..";
-import { pipe } from "ramda";
 import { expectErr, expectOk } from "./helpers";
+import { chain } from "../lib/chain";
 
 describe("Option", () => {
     describe("methods", () => {
@@ -79,10 +79,13 @@ describe("Option", () => {
     describe("namespace functions", () => {
         it("map", () => {
             const optionA = some("yolo");
-            const checkLengthOver2 = pipe<Option<string>, Option<number>, Option<boolean>>(
-                Option.map(a => a.length),
-                Option.map(aLength => aLength > 2),
-            );
+
+            const checkLengthOver2 = (option: Option<string>) =>
+                chain(
+                    option,
+                    Option.map(a => a.length),
+                    Option.map(aLength => aLength > 2),
+                );
 
             const optionIsLongEnough = checkLengthOver2(optionA);
             expect(optionIsLongEnough.getOrNull()).toBe(true);
@@ -95,9 +98,11 @@ describe("Option", () => {
 
         it("flatMap", () => {
             const optionA = some("yolo");
-            const checkLengthOver2 = pipe<Option<string>, Option<number>>(
-                Option.flatMap(a => some(a.length)),
-            );
+            const checkLengthOver2 = (option: Option<string>) =>
+                chain(
+                    option,
+                    Option.flatMap(a => some(a.length)),
+                );
 
             expect(checkLengthOver2(optionA).getOrNull()).toBe(4);
             expect(checkLengthOver2(none()).getOrNull()).toBe(null);
@@ -105,14 +110,13 @@ describe("Option", () => {
 
         it("caseOf", () => {
             const optionA = some("yolo");
-            const lengthOfString = pipe<Option<string>, number>(
-                Option.caseOf({
-                    some: a => a.length,
-                    none: () => 0,
-                }),
-            );
-            expect(lengthOfString(optionA)).toBe(4);
-            expect(lengthOfString(none())).toBe(0);
+            const getLengthOfString = Option.caseOf<string, unknown>({
+                some: a => a.length,
+                none: () => 0,
+            });
+
+            expect(getLengthOfString(optionA)).toBe(4);
+            expect(getLengthOfString(none())).toBe(0);
         });
 
         it("toResult", () => {

@@ -1,5 +1,4 @@
-import { none, Option, some, noneAsync, OptionAsync, someAsync, fromOption } from "..";
-import { pipe } from "ramda";
+import { none, Option, some, noneAsync, OptionAsync, someAsync, fromOption, chain } from "..";
 
 describe("OptionAsync", () => {
     describe("methods", () => {
@@ -65,17 +64,15 @@ describe("OptionAsync", () => {
 
     describe("namespace functions", () => {
         it("map", async () => {
-            const optionA = someAsync("yolo");
-            const checkLengthOver2 = pipe<
-                OptionAsync<string>,
-                OptionAsync<number>,
-                OptionAsync<boolean>
-            >(
-                OptionAsync.map(a => a.length),
-                OptionAsync.map(aLength => aLength > 2),
-            );
+            const optionAsyncA = someAsync("yolo");
+            const checkLengthOver2 = (optionAsync: OptionAsync<string>) =>
+                chain(
+                    optionAsync,
+                    OptionAsync.map(a => a.length),
+                    OptionAsync.map(aLength => aLength > 2),
+                );
 
-            const optionIsLongEnough = checkLengthOver2(optionA);
+            const optionIsLongEnough = checkLengthOver2(optionAsyncA);
             expect(await optionIsLongEnough.getOrNull()).toBe(true);
 
             const optionStr = noneAsync<string>();
@@ -86,26 +83,30 @@ describe("OptionAsync", () => {
 
         it("flatMap", async () => {
             const optionA = someAsync("yolo");
-            const lengthOfString = pipe<OptionAsync<string>, OptionAsync<number>, OptionAsync<boolean>>(
-                OptionAsync.flatMap(a => some(a.length)),
-                OptionAsync.map(aLength => aLength > 2),
-            );
+            const lengthOfString = (optionAsync: OptionAsync<string>) =>
+                chain(
+                    optionAsync,
+                    OptionAsync.flatMap(a => some(a.length)),
+                    OptionAsync.map(aLength => aLength > 2),
+                );
 
             expect(await lengthOfString(optionA).getOrNull()).toBe(true);
             expect(await lengthOfString(noneAsync()).getOrNull()).toBe(null);
         });
 
         it("caseOf", async () => {
-            const optionA = someAsync("yolo");
-            const checkLengthOver2 = pipe<OptionAsync<string>, OptionAsync<number>, Promise<boolean>>(
-                OptionAsync.flatMap(a => some(a.length)),
-                OptionAsync.caseOf({
-                    some: aLength => aLength > 2,
-                    none: () => false,
-                }),
-            );
+            const optionAsyncA = someAsync("yolo");
+            const checkLengthOver2 = (optionAsync: OptionAsync<string>) =>
+                chain(
+                    optionAsync,
+                    OptionAsync.flatMap(a => some(a.length)),
+                    OptionAsync.caseOf({
+                        some: aLength => aLength > 2,
+                        none: () => false,
+                    }),
+                );
 
-            expect(await checkLengthOver2(optionA)).toBe(true);
+            expect(await checkLengthOver2(optionAsyncA)).toBe(true);
             expect(await checkLengthOver2(noneAsync())).toBe(false);
         });
 

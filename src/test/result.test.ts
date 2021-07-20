@@ -1,5 +1,4 @@
-import { pipe } from "ramda";
-import { err, ok, Result, combine } from "..";
+import { err, ok, Result, combine, chain } from "..";
 
 import { expectErr, expectOk } from "./helpers";
 
@@ -88,14 +87,12 @@ describe("Result", () => {
         });
         it("map", () => {
             const okStr: Result<string, Error> = ok("yolo");
-            const isLongEnough = pipe<
-                Result<string, Error>,
-                Result<number, Error>,
-                Result<boolean, Error>
-            >(
-                Result.map(str => str.length),
-                Result.map(len => len > 3),
-            );
+            const isLongEnough = (result: Result<string, Error>) =>
+                chain(
+                    result,
+                    Result.map(str => str.length),
+                    Result.map(len => len > 3),
+                );
 
             expectOk(isLongEnough(okStr), true);
 
@@ -105,17 +102,15 @@ describe("Result", () => {
 
         it("flatMap", () => {
             const okStr: Result<string, "something wrong"> = ok("yolo");
-            const isLongEnoughWithError = pipe<
-                Result<string, "something wrong">,
-                Result<number, "something wrong">,
-                Result<void, "something wrong" | "to short">
-            >(
-                Result.map(str => str.length),
-                Result.flatMap(len => {
-                    if (len < 3) return err("to short");
-                    return ok();
-                }),
-            );
+            const isLongEnoughWithError = (result: Result<string, "something wrong">) =>
+                chain(
+                    result,
+                    Result.map(str => str.length),
+                    Result.flatMap((len): Result<void, "something wrong" | "to short"> => {
+                        if (len < 3) return err("to short");
+                        return ok();
+                    }),
+                );
 
             expectOk(isLongEnoughWithError(okStr), undefined);
             expectErr(isLongEnoughWithError(ok("yo")), "to short");
@@ -123,13 +118,17 @@ describe("Result", () => {
 
         it("caseOf", () => {
             const okA: Result<{ n: number }, string> = ok({ n: 2 });
-            const goodOrBad = pipe<Result<{ n: number }, string>, Result<number, string>, string>(
-                Result.map(obj => obj.n),
-                Result.caseOf({
-                    ok: n => "Good " + n,
-                    err: e => "Bad " + e,
-                }),
-            );
+
+            // <Result<{ n: number }, string>, Result<number, string>, string>
+            const goodOrBad = (result: Result<{ n: number }, string>) =>
+                chain(
+                    result,
+                    Result.map(obj => obj.n),
+                    Result.caseOf({
+                        ok: n => "Good " + n,
+                        err: e => "Bad " + e,
+                    }),
+                );
 
             const badB: Result<{ n: number }, string> = err("mistake");
 
