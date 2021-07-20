@@ -1,10 +1,10 @@
 import { err, ok, Result, ResultCases } from "./result";
 import { curry } from "./utils";
 
-export const okAsync = <A, E>(value: A): ResultAsync<A, E> =>
-    new ResultAsync(Promise.resolve(ok<A, E>(value)));
-export const errAsync = <A, E>(error: E): ResultAsync<A, E> =>
-    new ResultAsync(Promise.resolve(err<A, E>(error)));
+export const fromResult = <A, E>(result: Result<A, E>): ResultAsync<A, E> =>
+    new ResultAsync(Promise.resolve(result));
+export const okAsync = <A, E>(value: A): ResultAsync<A, E> => fromResult(ok<A, E>(value));
+export const errAsync = <A, E>(error: E): ResultAsync<A, E> => fromResult(err<A, E>(error));
 
 export const fromPromise = <T, F>(somePromise: Promise<T>, onError?: (e: unknown) => F) => {
     const promiseResult: Promise<Result<T, F>> = somePromise

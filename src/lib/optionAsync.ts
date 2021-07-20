@@ -39,12 +39,15 @@ export class OptionAsync<A> implements PromiseLike<Option<A>> {
     }
 }
 
-export const someAsync = <A>(a: A) => new OptionAsync(Promise.resolve(some(a)));
+export const fromOption = <A>(option: Option<A>): OptionAsync<A> =>
+    new OptionAsync(Promise.resolve(option));
+export const someAsync = <A>(a: A) => fromOption(some(a));
 export const noneAsync = <T>() => {
-    const t: Option<T> = none();
-    return new OptionAsync(Promise.resolve(t));
+    const optionT: Option<T> = none();
+    return fromOption(optionT);
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export namespace OptionAsync {
     // prettier-ignore
     export function map<A, B>(f: (a: A) => B, a: OptionAsync<A>): OptionAsync<B>;

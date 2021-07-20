@@ -61,7 +61,7 @@ export class None implements Option<never> {
         return none();
     }
 
-    public flatMap<B>(_: (a: never) => B) {
+    public flatMap<B>(_: (a: never) => Option<B>) {
         return none();
     }
 
@@ -86,6 +86,7 @@ export class None implements Option<never> {
     }
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace Option {
     export function map<A, B>(f: (a: A) => B, a: Option<A>): Option<B>;

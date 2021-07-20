@@ -1,9 +1,10 @@
-import { err, errAsync, fromPromise, ok, okAsync, Result, ResultAsync } from "..";
+import { err, errAsync, fromPromise, ok, okAsync, Result, ResultAsync, fromResult } from "..";
 import { expectErrAsync, expectOkAsync } from "./helpers";
 
 describe("ResultAsync", () => {
     describe("methods", () => {
         it("construct okAsync and errAsync", async () => {
+            await expectOkAsync(fromResult(ok(10)), 10);
             await expectOkAsync(okAsync(12), 12);
             await expectErrAsync(errAsync("failed"), "failed");
         });

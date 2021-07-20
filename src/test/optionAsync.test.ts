@@ -1,12 +1,16 @@
-import { none, Option, some, noneAsync, OptionAsync, someAsync } from "..";
+import { none, Option, some, noneAsync, OptionAsync, someAsync, fromOption } from "..";
 import { pipe } from "ramda";
-import { expectOkAsync } from "./helpers";
 
 describe("OptionAsync", () => {
     describe("methods", () => {
         it("construct some and none", async () => {
             expect(await someAsync(12).getOrNull()).toBe(12);
             expect(await noneAsync().getOrNull()).toBeNull();
+        });
+
+        it("construct fromOption", async () => {
+            expect(await fromOption(some(10)).getOrNull()).toBe(10);
+            expect(await fromOption(none()).getOrNull()).toBeNull();
         });
 
         it("getOrElse", async () => {
