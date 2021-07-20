@@ -1,3 +1,9 @@
+### **0.0.6** (2021-07-20)  
+  
+- add fromOption and fromResult to build async  
+- add list utils returning Option  
+- readme complete    
+  
 ### **0.0.5** (2021-05-27)  
   
 - add Result and ResultAsync documentation  
